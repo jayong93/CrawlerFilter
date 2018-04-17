@@ -2,11 +2,13 @@
 import argparse
 import os
 import json
+import sys
 
 def add_arguments(arg_parser):
     arg_parser.add_argument("archive", nargs="+", help="archives to be filtered")
     arg_parser.add_argument("--dislike_multiplier", type=float, default=2, help="a number to be multiply to dislike count")
-    arg_parser.add_argument("-o", "--out_to", type=argparse.FileType('w', encoding='utf-8'), help="a file to include this program's output") 
+    arg_parser.add_argument("-o", "--out_to", help="a file to include this program's output") 
+    arg_parser.add_argument("-a", "--append", action="store_true", help="append the result to output file, not overwrite")
     return arg_parser
 
 # 걸러진 댓글들을 반환하는 함수
@@ -30,11 +32,31 @@ def is_useful(min_like, min_like_ratio, dislike_multiplier):
 
     return is_useful_comment
 
+def save_result(result_list, output_file, append):
+    file_size = output_file.tell()
+    if not append or file_size == 0:
+        output_file.seek(0)
+        json.dump(result_list, output_file, ensure_ascii=False)
+    elif file_size > 0:
+        output_file.seek(0)
+        data = json.load(output_file)
+        data += result_list
+        output_file.truncate(0)
+        json.dump(data, output_file, ensure_ascii=False)
+
 if __name__ == "__main__":
     parser = add_arguments(argparse.ArgumentParser())
     args = parser.parse_args()
     inputs = args.archive
 
+    # output file check
+    if args.out_to != None:
+        out_file_path = args.out_to
+        if os.path.exists(out_file_path) and not os.path.isfile(out_file_path):
+            parser.error("the output file which is not a normal file has existed")
+        out_file = open(out_file_path, 'a+', encoding='utf-8')
+
+    # input들을 모두 open함
     archives = []
     if all([os.path.isfile(inp) or os.path.isdir(inp) for inp in inputs]):
         for inp in inputs:
@@ -44,14 +66,12 @@ if __name__ == "__main__":
             else:
                 archives.append(open(inp))
     else:
-        parser.error("The input  archievs are not directories or files")
+        parser.error("The input archives are not directories or files")
 
     result = [get_filtered_list(archive, args.dislike_multiplier) for archive in archives]
-    if len(result) == 1:
-        result = result[0]
-    result_json = json.dumps(result, ensure_ascii=False)
     if args.out_to == None:
+        result_json = json.dumps(result, ensure_ascii=False)
         print(result_json)
     else:
-        args.out_to.write(result_json)
+        save_result(result, out_file, args.append)
 
