@@ -1,23 +1,23 @@
+#!/usr/bin/python3
 import argparse
 import os
 import json
 
 def add_arguments(arg_parser):
     arg_parser.add_argument("archive", nargs="+", help="archives to be filtered")
-    arg_parser.add_argument("--like_count", type=int, default=500, help="minimum count of comment's like")
-    arg_parser.add_argument("--like_ratio", type=float, default=1, help="minimum ratio of comment's like and dislike")
     arg_parser.add_argument("--dislike_multiplier", type=float, default=2, help="a number to be multiply to dislike count")
     arg_parser.add_argument("-o", "--out_to", type=argparse.FileType('w', encoding='utf-8'), help="a file to include this program's output") 
     return arg_parser
 
 # 걸러진 댓글들을 반환하는 함수
-def get_filtered_list(archive_file, min_like, min_like_ratio, dislike_multiplier):
+def get_filtered_list(archive_file, dislike_multiplier):
     archive_dict = json.load(archive_file)
     title = archive_dict["title"]
     comment_list = get_comment_list(archive_dict)
-    filtered = filter(is_useful(min_like, min_like_ratio, dislike_multiplier), comment_list)
-    filtered = sorted(filtered, key=lambda o: o["like"] - o["dislike"]*dislike_multiplier, reverse=True)
-    return {"title":title, "comments":[cmt["text"] for cmt in filtered]}
+    result = sorted(comment_list, key=lambda o: o["like"] - o["dislike"]*dislike_multiplier, reverse=True)
+    result = sorted(result, key=lambda o: o["like"], reverse=True)
+    result_len = len(result)*0.1
+    return {"title":title, "comments":[cmt["text"] for cmt in result[:int(result_len)]]}
 
 # 전체 기록에서 댓글만 반환하는 함수
 def get_comment_list(archive_dict):
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     else:
         parser.error("The input  archievs are not directories or files")
 
-    result = [get_filtered_list(archive, args.like_count, args.like_ratio, args.dislike_multiplier) for archive in archives]
+    result = [get_filtered_list(archive, args.dislike_multiplier) for archive in archives]
     if len(result) == 1:
         result = result[0]
     result_json = json.dumps(result, ensure_ascii=False)
