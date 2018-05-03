@@ -5,7 +5,7 @@ import json
 import sys
 
 def add_arguments(arg_parser):
-    arg_parser.add_argument("archive", nargs="+", help="archives to be filtered")
+    arg_parser.add_argument("archive", nargs="*", help="archives to be filtered")
     arg_parser.add_argument("--dislike_multiplier", type=float, default=2, help="a number to be multiply to dislike count")
     arg_parser.add_argument("-o", "--out_to", type=argparse.FileType('w', encoding='utf-8'), help="a file to include this program's output") 
     return arg_parser
@@ -38,6 +38,9 @@ if __name__ == "__main__":
 
     # input들을 모두 open함
     archives = []
+    # 명령줄 입력이 없으면 stdin에서 읽음
+    if len(inputs) == 0:
+        inputs += list(map(lambda x: x.strip(), sys.stdin.readlines()))
     if all([os.path.isfile(inp) or os.path.isdir(inp) for inp in inputs]):
         for inp in inputs:
             if os.path.isdir(inp):

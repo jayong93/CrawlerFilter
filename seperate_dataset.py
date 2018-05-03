@@ -2,10 +2,12 @@
 
 import argparse
 import random
+import shutil
 
 def add_arguments(parser):
     parser.add_argument("title", type=argparse.FileType('r', encoding='utf-8'), help="text file which has titles")
     parser.add_argument("comment", type=argparse.FileType('r', encoding='utf-8'), help="text file which has comments")
+    parser.add_argument("vocab", type=argparse.FileType('r', encoding='utf-8'), help="text file which has vocabraries")
     parser.add_argument("--title_suffix", default='title')
     parser.add_argument("--comment_suffix", default='comment')
     return parser
@@ -30,3 +32,9 @@ if __name__ == '__main__':
     for (title, comment) in data_set[train_len:]:
         title_test.write(title+'\n')
         comment_test.write(comment+'\n')
+
+    # dev 파일과 vocab 파일 생성
+    shutil.copyfile('test.'+args.title_suffix, 'dev.'+args.title_suffix)
+    shutil.copyfile('test.'+args.comment_suffix, 'dev.'+args.comment_suffix)
+    shutil.copyfile('vocab.txt', 'vocab.'+args.title_suffix)
+    shutil.copyfile('vocab.txt', 'vocab.'+args.comment_suffix)
