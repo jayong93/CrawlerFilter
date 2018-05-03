@@ -8,7 +8,7 @@ import os
 def add_arguments(parser):
     parser.add_argument("title", type=argparse.FileType('r', encoding='utf-8'), help="text file which has titles")
     parser.add_argument("comment", type=argparse.FileType('r', encoding='utf-8'), help="text file which has comments")
-    parser.add_argument("vocab", nargs='?', encoding='utf-8'), help="text file which has vocabraries")
+    parser.add_argument("vocab", nargs='?', encoding='utf-8', help="text file which has vocabraries")
     parser.add_argument("--title_suffix", default='title')
     parser.add_argument("--comment_suffix", default='comment')
     return parser
